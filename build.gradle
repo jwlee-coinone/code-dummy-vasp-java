@@ -1,0 +1,30 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.0'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'com.codevap'
+version = '0.0.1'
+sourceCompatibility = '11'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation files('libs/gson-2.8.2.jar')
+	implementation files('libs/jna-5.8.0.jar')
+	implementation files('libs/lazysodium-java-5.1.1.jar')
+	implementation files('libs/org.json.jar')
+	implementation files('libs/resource-loader-2.0.1.jar')
+	implementation files('libs/slf4j-api-1.7.30.jar')
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
