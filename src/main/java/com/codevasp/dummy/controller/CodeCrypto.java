@@ -21,28 +21,51 @@ import com.goterl.lazysodium.interfaces.Sign;
 import com.goterl.lazysodium.utils.Key;
 import com.goterl.lazysodium.utils.KeyPair;
 
-@Component
 public class CodeCrypto {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
 
-	@Value("${my.privkey}")
-	private String base64OwnSecretKey;
-	private String base64RemotePublicKey;
+//	@Value("${my.privkey}")
+//	private String base64OwnSecretKey;
+//	@Value("${remote.publicKey}")
+//	private String base64RemotePublicKey;
 	private KeyPair signKeyPair;
 	private Key peerVerifyKey;
 	private byte[] peerPublicKey;
 	private LazySodiumJava sodium = new LazySodiumJava(new SodiumJava(), new UrlSafeBase64MessageEncoder());
 	private byte[] sharedKey = new byte[Box.BEFORENMBYTES];
 
-	@PostConstruct
-	private void init() {
+	//@PostConstruct
+//	private void init() {
+//		try {
+//			sodium.sodiumInit();
+//			logger.info("base64OwnSecretKey: " + base64OwnSecretKey);
+//			byte[] seed = Base64.getDecoder().decode(base64OwnSecretKey);
+//			signKeyPair = sodium.cryptoSignSeedKeypair(seed);
+//			if (base64RemotePublicKey != null) {
+//				peerVerifyKey = Key.fromBase64String(base64RemotePublicKey);
+//				peerPublicKey = new byte[Sign.CURVE25519_PUBLICKEYBYTES];
+//				sodium.convertPublicKeyEd25519ToCurve25519(peerPublicKey, peerVerifyKey.getAsBytes());
+//
+//				KeyPair cryptoKeyPair = sodium.convertKeyPairEd25519ToCurve25519(signKeyPair);
+//				if (!sodium.cryptoBoxBeforeNm(sharedKey, peerPublicKey, cryptoKeyPair.getSecretKey().getAsBytes())) {
+//					throw new SodiumException("Unable to make shared key");
+//				}
+//			}
+//		} catch (SodiumException e) {
+//			e.printStackTrace();
+//		}
+//	}
+
+	public CodeCrypto(String b64OwnSecretKey, String b64RemotePublicKey) {
+		
 		try {
 			sodium.sodiumInit();
-			logger.info("base64OwnSecretKey: " + base64OwnSecretKey);
-			byte[] seed = Base64.getDecoder().decode(base64OwnSecretKey);
+			logger.info("base64OwnSecretKey: " + b64OwnSecretKey);
+			byte[] seed = Base64.getDecoder().decode(b64OwnSecretKey);
 			signKeyPair = sodium.cryptoSignSeedKeypair(seed);
-			if (base64RemotePublicKey != null) {
-				peerVerifyKey = Key.fromBase64String(base64RemotePublicKey);
+			
+			if (! b64RemotePublicKey.isEmpty()) {
+				peerVerifyKey = Key.fromBase64String(b64RemotePublicKey);
 				peerPublicKey = new byte[Sign.CURVE25519_PUBLICKEYBYTES];
 				sodium.convertPublicKeyEd25519ToCurve25519(peerPublicKey, peerVerifyKey.getAsBytes());
 
@@ -50,12 +73,13 @@ public class CodeCrypto {
 				if (!sodium.cryptoBoxBeforeNm(sharedKey, peerPublicKey, cryptoKeyPair.getSecretKey().getAsBytes())) {
 					throw new SodiumException("Unable to make shared key");
 				}
-			}
+			}	
 		} catch (SodiumException e) {
 			e.printStackTrace();
 		}
+		
 	}
-
+	
 	public String getVerifyKey() {
 		return Base64.getEncoder().encodeToString(signKeyPair.getPublicKey().getAsBytes());
 	}

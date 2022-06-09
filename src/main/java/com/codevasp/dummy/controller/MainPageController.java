@@ -16,7 +16,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
@@ -25,15 +28,22 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.goterl.lazysodium.exceptions.SodiumException;
 
-import org.springframework.beans.factory.annotation.Value;
-
 @RestController
 public class MainPageController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
+	@Value("${my.privkey}")
+	private String b64OwnSecretKey;
+	
+	@RequestMapping("/hello")
+	public String hello(@RequestParam("name") String name, Model model) {
+		model.addAttribute("name", name);
+		return "hello-template";
+	}
 	
 	@RequestMapping("/")
     public String mainPage() throws JSONException, SodiumException, IOException {
-		//CodeCrypto crypto = new CodeCrypto();
+		logger.info("base64OwnSecretKey: " + b64OwnSecretKey);
+		CodeCrypto crypto = new CodeCrypto(b64OwnSecretKey, "");
 		
 		// Generating Signature
 		int iNonce = (int)(Math.random() * 10000);
@@ -49,7 +59,7 @@ public class MainPageController {
 		//buffer.write(body.getBytes());
 		buffer.write(CodeCrypto.toBytes(iNonce));
 		
-		byte[] signature = codeCrypto.sign(buffer.toByteArray());
+		byte[] signature = crypto.sign(buffer.toByteArray());
 		String signatureBase64 = Base64.getEncoder().encodeToString(signature);
 		
 		//URL url = new URL("https://test-api-codevasp.gamevilcom2us.com/v1/code/VerifyAddress");
@@ -60,7 +70,7 @@ public class MainPageController {
 		conn.setDoOutput(true);
 		
 		conn.setRequestProperty("Content-Type", "application/json");
-		conn.setRequestProperty("X-Code-Req-PubKey", codeCrypto.getVerifyKey());
+		conn.setRequestProperty("X-Code-Req-PubKey", crypto.getVerifyKey());
 		conn.setRequestProperty("X-Code-Req-Signature", signatureBase64);
 		conn.setRequestProperty("X-Code-Req-Datetime",  strDateTime);
 		conn.setRequestProperty("X-Code-Req-Nonce", String.valueOf(iNonce));
@@ -75,7 +85,7 @@ public class MainPageController {
 		
 		// 보내고 결과값 받기
 		int responseCode = conn.getResponseCode();
-		System.out.println("responseCode: " + responseCode);
+		logger.info("responseCode: " + responseCode);
 		
 		BufferedReader br = null;
 		String strCurrentLine;
@@ -97,8 +107,8 @@ public class MainPageController {
 				JsonElement je = jp.parse(receivedMessage.toString());
 				return gson.toJson(je);
 			} catch (JSONException e) {
-			    System.out.println(e.getMessage());
-			    System.out.println(strCurrentLine);
+				logger.error(e.getMessage());
+				logger.error(strCurrentLine);
 			}
 		}
         return "Hello World.";
