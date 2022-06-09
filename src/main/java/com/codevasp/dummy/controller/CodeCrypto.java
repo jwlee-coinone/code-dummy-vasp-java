@@ -5,12 +5,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
 
-import javax.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import com.goterl.lazysodium.LazySodiumJava;
 import com.goterl.lazysodium.SodiumJava;
@@ -24,43 +20,16 @@ import com.goterl.lazysodium.utils.KeyPair;
 public class CodeCrypto {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
 
-//	@Value("${my.privkey}")
-//	private String base64OwnSecretKey;
-//	@Value("${remote.publicKey}")
-//	private String base64RemotePublicKey;
 	private KeyPair signKeyPair;
 	private Key peerVerifyKey;
 	private byte[] peerPublicKey;
 	private LazySodiumJava sodium = new LazySodiumJava(new SodiumJava(), new UrlSafeBase64MessageEncoder());
 	private byte[] sharedKey = new byte[Box.BEFORENMBYTES];
 
-	//@PostConstruct
-//	private void init() {
-//		try {
-//			sodium.sodiumInit();
-//			logger.info("base64OwnSecretKey: " + base64OwnSecretKey);
-//			byte[] seed = Base64.getDecoder().decode(base64OwnSecretKey);
-//			signKeyPair = sodium.cryptoSignSeedKeypair(seed);
-//			if (base64RemotePublicKey != null) {
-//				peerVerifyKey = Key.fromBase64String(base64RemotePublicKey);
-//				peerPublicKey = new byte[Sign.CURVE25519_PUBLICKEYBYTES];
-//				sodium.convertPublicKeyEd25519ToCurve25519(peerPublicKey, peerVerifyKey.getAsBytes());
-//
-//				KeyPair cryptoKeyPair = sodium.convertKeyPairEd25519ToCurve25519(signKeyPair);
-//				if (!sodium.cryptoBoxBeforeNm(sharedKey, peerPublicKey, cryptoKeyPair.getSecretKey().getAsBytes())) {
-//					throw new SodiumException("Unable to make shared key");
-//				}
-//			}
-//		} catch (SodiumException e) {
-//			e.printStackTrace();
-//		}
-//	}
-
 	public CodeCrypto(String b64OwnSecretKey, String b64RemotePublicKey) {
 		
 		try {
 			sodium.sodiumInit();
-			logger.info("base64OwnSecretKey: " + b64OwnSecretKey);
 			byte[] seed = Base64.getDecoder().decode(b64OwnSecretKey);
 			signKeyPair = sodium.cryptoSignSeedKeypair(seed);
 			
