@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--VierResolver-->
+<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+	<property name="prefix" value="/templates"/>
+	<property name="suffix" value=".html"/>
+	<property name="order" value="2" />
+</bean>

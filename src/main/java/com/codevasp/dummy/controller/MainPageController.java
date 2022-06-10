@@ -17,10 +17,11 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -28,21 +29,20 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.goterl.lazysodium.exceptions.SodiumException;
 
-@RestController
+@Controller
 public class MainPageController {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getSimpleName());
 	@Value("${my.privkey}")
 	private String b64OwnSecretKey;
 	
-	@RequestMapping("/hello")
-	public String hello(@RequestParam("name") String name, Model model) {
+	@GetMapping("/hello")
+	public String hello(@RequestParam(name="name", required=false, defaultValue="CODE") String name, Model model) {
 		model.addAttribute("name", name);
-		return "hello-template";
+		return "hello";
 	}
 	
-	@RequestMapping("/")
-    public String mainPage() throws JSONException, SodiumException, IOException {
-		logger.info("base64OwnSecretKey: " + b64OwnSecretKey);
+	@GetMapping("/vasp")
+    public String mainPage(Model model) throws JSONException, SodiumException, IOException {
 		CodeCrypto crypto = new CodeCrypto(b64OwnSecretKey, "");
 		
 		// Generating Signature
@@ -105,12 +105,17 @@ public class MainPageController {
 				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				JsonParser jp = new JsonParser();
 				JsonElement je = jp.parse(receivedMessage.toString());
-				return gson.toJson(je);
+				logger.info("vaspData: " + gson.toJson(je));
+				model.addAttribute("vaspData", receivedMessage.toString());
 			} catch (JSONException e) {
 				logger.error(e.getMessage());
 				logger.error(strCurrentLine);
 			}
 		}
-        return "Hello World.";
+        return "vasps";
     }
+	
+//	@PostMapping("/address/verification")
+//	public String verifyAddress(@RequestBody)
+//	
 }
